@@ -1,0 +1,38 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_IMAGE: "$CI_REGISTRY_IMAGE:latest"
+
+docker-build:
+  image: docker:latest  
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - docker build --pull -t "$DOCKER_IMAGE" .
+    - docker push "$DOCKER_IMAGE"
+  except:
+    - master
+
+deploy:
+  stage: deploy
+  image: python:3.9  
+  services:
+    - docker:dind
+  before_script:
+    - pip install --upgrade pip
+    - pip install --no-cache-dir -r requirements.txt
+  script:
+    - export POSTGRES_HOST="$POSTGRES_HOST"
+    - export POSTGRES_PORT="$POSTGRES_PORT"
+    - export POSTGRES_DB="$POSTGRES_DB"
+    - export POSTGRES_USER="$POSTGRES_USER"
+    - export POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
+    - python deploy_popularity_classification.py && python deploy_sentiment_score.py
+  only:
+    - schedules
+

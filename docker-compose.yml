@@ -1,0 +1,19 @@
+services:
+  app:
+    image: s1147900/indatad:latest
+    restart: "no"
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+    working_dir: /app
+    volumes:
+      - /data/video:/app/INDATAD
+    command: ["sh", "-c", "sleep 30 && python main.py && tail -f /dev/null"]
+    network_mode: "host"
+
+volumes:
+  db_data:
